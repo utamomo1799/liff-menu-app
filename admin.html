@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>集計結果</title>
+<style>
+  :root{
+    --bg:#FAFAF7; --ink:#22303C; --ink-soft:#5C6B77; --line:#E3E0D8;
+    --indigo:#3A5A78; --card:#FFFFFF;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    font-family:-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    background:var(--bg); color:var(--ink);
+  }
+  header{ padding:20px 18px 14px; border-bottom:1px solid var(--line); background:var(--card); }
+  header h1{ font-size:17px; margin:0 0 2px; font-weight:700; }
+  header p{ margin:0; font-size:12.5px; color:var(--ink-soft); }
+  main{ padding:16px; max-width:480px; margin:0 auto; }
+  .stat{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px; }
+  .stat .label{ font-size:12.5px; color:var(--ink-soft); margin:0 0 4px; }
+  .stat .value{ font-size:26px; font-weight:700; margin:0; }
+  .item{ margin-bottom:14px; }
+  .item .row{ display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:5px; }
+  .item .row .n{ font-weight:700; }
+  .bar{ height:9px; background:#EFEDE6; border-radius:5px; overflow:hidden; }
+  .bar > div{ height:100%; background:var(--indigo); }
+  .refresh{ display:block; text-align:center; margin-top:18px; font-size:12.5px; color:var(--indigo); text-decoration:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>集計結果</h1>
+  <p>12月忘年会のメニュー回答状況</p>
+</header>
+<main>
+  <div id="app">読み込み中…</div>
+</main>
+
+<script>
+  // ▼▼▼ ここを書き換えてください(gas/Code.gsと同じ値にすること) ▼▼▼
+  var API_URL = 'ここにGASのウェブアプリURL(.../exec)を貼り付け';
+  var ADMIN_KEY = 'change-me-1234';
+  // ▲▲▲ ここまで ▲▲▲
+
+  fetch(API_URL + '?page=admin&key=' + encodeURIComponent(ADMIN_KEY))
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      var app = document.getElementById('app');
+      if (data.error) {
+        app.textContent = data.error;
+        return;
+      }
+      var itemsHtml = data.items.map(function (it) {
+        return (
+          '<div class="item">' +
+            '<div class="row"><span>' + it.name + '</span><span class="n">' + it.count + '人</span></div>' +
+            '<div class="bar"><div style="width:' + it.percent + '%"></div></div>' +
+          '</div>'
+        );
+      }).join('');
+
+      app.innerHTML =
+        '<div class="stat"><p class="label">回答済み人数</p><p class="value">' + data.respondents + ' 人</p></div>' +
+        '<div class="stat"><p class="label" style="margin-bottom:14px;">メニュー別 希望人数</p>' + itemsHtml + '</div>' +
+        '<a class="refresh" href="javascript:location.reload()">更新する</a>';
+    })
+    .catch(function (err) {
+      document.getElementById('app').textContent = '読み込みエラー: ' + err.message;
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>メニュー選択</title>
+<style>
+  :root{
+    --bg:#FAFAF7; --ink:#22303C; --ink-soft:#5C6B77; --line:#E3E0D8;
+    --indigo-deep:#22384C; --coral:#E2654A; --card:#FFFFFF;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    font-family:-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    background:var(--bg); color:var(--ink);
+  }
+  header{ padding:20px 18px 14px; border-bottom:1px solid var(--line); background:var(--card); }
+  header h1{ font-size:17px; margin:0 0 2px; font-weight:700; }
+  header p{ margin:0; font-size:12.5px; color:var(--ink-soft); }
+  main{ padding:14px 14px 110px; }
+  .card{
+    display:flex; gap:12px; align-items:center;
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:10px; margin-bottom:10px;
+  }
+  .thumb{
+    width:56px; height:56px; border-radius:10px; background:#EFEDE6;
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px; flex-shrink:0; overflow:hidden;
+  }
+  .thumb img{ width:100%; height:100%; object-fit:cover; }
+  .info{ flex:1; min-width:0; }
+  .info .name{ font-size:14.5px; font-weight:700; margin:0 0 2px; }
+  .info .desc{ font-size:12px; color:var(--ink-soft); margin:0; }
+  .stepper{ display:flex; align-items:center; gap:8px; }
+  .stepper button{
+    width:30px; height:30px; border-radius:50%;
+    border:1px solid var(--line); background:#fff;
+    font-size:16px; line-height:1; color:var(--indigo-deep);
+  }
+  .stepper button:active{ background:#EFEDE6; }
+  .stepper .count{ width:18px; text-align:center; font-weight:700; font-size:14px; }
+  footer{
+    position:fixed; bottom:0; left:0; right:0;
+    padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+    background:var(--card); border-top:1px solid var(--line);
+  }
+  #submitBtn{
+    width:100%; border:none; border-radius:12px; padding:13px;
+    background:var(--coral); color:#fff; font-size:15px; font-weight:700;
+  }
+  #submitBtn:disabled{ background:#D8D4C8; }
+  #status{ font-size:12px; text-align:center; margin-top:6px; color:var(--ink-soft); min-height:16px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>12月忘年会</h1>
+  <p>食べたいメニューを選んでね</p>
+</header>
+
+<main id="menuList"></main>
+
+<footer>
+  <button id="submitBtn">この内容で送信する</button>
+  <p id="status"></p>
+</footer>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+  // ▼▼▼ ここを書き換えてください ▼▼▼
+  var LIFF_ID = 'ここに作成したLIFF_IDを貼り付け';
+  var API_URL = 'ここにGASのウェブアプリURL(.../exec)を貼り付け';
+  // ▲▲▲ ここまで ▲▲▲
+
+  // メニュー一覧。idと並び順は gas/Code.gs の MENU_IDS と完全に一致させてください。
+  var MENU = [
+    { id: 'motsunabe',  name: 'もつ鍋コース',     desc: '2名〜 / ¥4,500',     image: '', emoji: '🍲' },
+    { id: 'yakiniku',   name: '焼肉盛り合わせ',   desc: '¥1,800',            image: '', emoji: '🥩' },
+    { id: 'nomihodai',  name: '飲み放題プラン',   desc: '120分 / ¥2,000',    image: '', emoji: '🍻' },
+    { id: 'softdrink',  name: 'ソフトドリンクのみ', desc: 'お酒なし参加者向け', image: '', emoji: '🥤' },
+  ];
+
+  var profile = { userId: 'test-user', displayName: 'テストユーザー' };
+
+  function renderMenu() {
+    var main = document.getElementById('menuList');
+    main.innerHTML = MENU.map(function (m) {
+      var thumb = m.image
+        ? '<img src="' + m.image + '" alt="">'
+        : m.emoji;
+      return (
+        '<div class="card" data-id="' + m.id + '">' +
+          '<div class="thumb">' + thumb + '</div>' +
+          '<div class="info"><p class="name">' + m.name + '</p><p class="desc">' + m.desc + '</p></div>' +
+          '<div class="stepper">' +
+            '<button class="minus" type="button" aria-label="減らす">−</button>' +
+            '<span class="count">0</span>' +
+            '<button class="plus" type="button" aria-label="増やす">＋</button>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
+
+    main.querySelectorAll('.card').forEach(function (card) {
+      var countEl = card.querySelector('.count');
+      card.querySelector('.plus').addEventListener('click', function () {
+        countEl.textContent = parseInt(countEl.textContent, 10) + 1;
+      });
+      card.querySelector('.minus').addEventListener('click', function () {
+        var v = parseInt(countEl.textContent, 10);
+        countEl.textContent = Math.max(0, v - 1);
+      });
+    });
+  }
+  renderMenu();
+
+  document.getElementById('submitBtn').addEventListener('click', function () {
+    var answers = {};
+    var total = 0;
+    document.querySelectorAll('.card').forEach(function (card) {
+      var v = parseInt(card.querySelector('.count').textContent, 10);
+      answers[card.dataset.id] = v;
+      total += v;
+    });
+    if (total === 0) {
+      document.getElementById('status').textContent = '1つ以上選んでください';
+      return;
+    }
+
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    document.getElementById('status').textContent = '送信中…';
+
+    fetch(API_URL, {
+      method: 'POST',
+      // text/plain にするのがポイント。application/json にするとCORSのプリフライトが必要になり、
+      // GASのウェブアプリはそれに対応していないため失敗します。
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        userId: profile.userId,
+        displayName: profile.displayName,
+        answers: answers,
+      }),
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || '不明なエラー');
+        document.getElementById('status').textContent = '送信しました！ありがとうございました';
+      })
+      .catch(function (err) {
+        btn.disabled = false;
+        document.getElementById('status').textContent = '送信に失敗しました: ' + err.message;
+      });
+  });
+
+  function initLiff() {
+    if (!LIFF_ID || LIFF_ID.indexOf('ここに') === 0) {
+      console.log('LIFF未設定のためテストモードで動作しています');
+      return;
+    }
+    liff.init({ liffId: LIFF_ID }).then(function () {
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
+      return liff.getProfile();
+    }).then(function (p) {
+      if (p) profile = p;
+    }).catch(function (err) {
+      document.getElementById('status').textContent = 'LIFF初期化エラー: ' + err;
+    });
+  }
+  initLiff();
+</script>
+</body>
+</html>
