@@ -57,8 +57,8 @@
 <body>
 
 <header>
-  <h1>12月忘年会</h1>
-  <p>食べたいメニューを選んでね</p>
+  <h1>run × cafe</h1>
+  <p>カフェメニューを選んでください</p>
 </header>
 
 <main id="menuList"></main>
@@ -70,18 +70,22 @@
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-  // ▼▼▼ ここを書き換えてください ▼▼▼
+  
   var LIFF_ID = '2010462755-pUi3rEkI';
   var API_URL = 'https://script.google.com/macros/s/AKfycbxiI6hcxKGrqa4U_a7C9wXph_3UK-TvMZ1scdJc99d8zYW3JuvMAHHaF_RzZmcOA-RjYw/exec';
-  // ▲▲▲ ここまで ▲▲▲
+  
 
   // メニュー一覧。idと並び順は gas/Code.gs の MENU_IDS と完全に一致させてください。
-  var MENU = [
-    { id: 'motsunabe',  name: 'もつ鍋コース',     desc: '2名〜 / ¥4,500',     image: '', emoji: '🍲' },
-    { id: 'yakiniku',   name: '焼肉盛り合わせ',   desc: '¥1,800',            image: '', emoji: '🥩' },
-    { id: 'nomihodai',  name: '飲み放題プラン',   desc: '120分 / ¥2,000',    image: '', emoji: '🍻' },
-    { id: 'softdrink',  name: 'ソフトドリンクのみ', desc: 'お酒なし参加者向け', image: '', emoji: '🥤' },
-  ];
+ var MENU = [
+  { id: 'hot_coffee',    name: 'ホットコーヒー',   desc: '',  image: '', emoji: '☕' },
+  { id: 'ice_coffee',    name: 'アイスコーヒー',   desc: '',  image: '', emoji: '🧊' },
+  { id: 'hot_tea',       name: 'ホットティー',     desc: '',  image: '', emoji: '🍵' },
+  { id: 'ice_tea',       name: 'アイスティー',     desc: '',  image: '', emoji: '🥤' },
+  { id: 'orange_juice',  name: 'オレンジジュース', desc: '',  image: '', emoji: '🍊' },
+  { id: 'cafe_latte',    name: 'カフェラテ',       desc: '',  image: '', emoji: '☕' },
+  { id: 'matcha_latte',  name: '抹茶ラテ',         desc: '',  image: '', emoji: '🍵' },
+  { id: 'scone',         name: 'スコーン',         desc: '',  image: '', emoji: '🥐' },
+];
 
   var profile = { userId: 'test-user', displayName: 'テストユーザー' };
 
